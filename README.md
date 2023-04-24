@@ -1,6 +1,6 @@
 # Simple Python App
 
-This is a simple Python app I am using to learn the basics of python.
+This is a simple Python app I am building to learn the basics of python.
 
 The app currently includes three simple games: Number Guessing Game, Rock Paper Scissors, and Coin Toss.
 
