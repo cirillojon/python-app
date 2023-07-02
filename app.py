@@ -42,47 +42,6 @@ class CoinTossGame(tk.Frame):
         self.balance_label = tk.Label(self, text=f"Balance: {self.balance} currency")
         self.balance_label.pack()
 
-    def create_widgets(self):
-        self.title_label = tk.Label(self, text="Coin Toss")
-        self.title_label.pack()
-
-        self.instructions_label = tk.Label(self, text="Guess heads or tails:")
-        self.instructions_label.pack()
-
-        self.guess_entry = tk.Entry(self)
-        self.guess_entry.pack()
-
-        # Modify the toss_coin function to include betting logic
-        self.toss_button = tk.Button(self, text="Toss Coin", command=self.toss_coin)
-        self.toss_button.pack()
-
-        self.result_label = tk.Label(self, text="")
-        self.result_label.pack()
-
-    def toss_coin(self):
-        guess = self.guess_entry.get().lower()
-        if guess not in ['heads', 'tails']:
-            self.result_label.config(text="Please enter 'heads' or 'tails'")
-        else:
-            coin = random.choice(['heads', 'tails'])
-
-            # Add betting logic
-            if self.bet_amount > self.currency:
-                self.result_label.config(text="Not enough currency to place bet.")
-                return
-
-            if guess == coin:
-                self.result_label.config(text="Congratulations, you guessed correctly!")
-                self.currency += self.bet_amount
-            else:
-                self.result_label.config(f"Sorry, the coin landed on {coin}. Better luck next time!")
-                self.currency -= self.bet_amount
-
-            # Update currency label and reset bet amount
-            self.currency_label.config(text=f"Currency: {self.currency}")
-            self.bet_amount = 0
-            self.bet_label.config(text="Bet amount: 0")
-
     # Add a function to handle setting the bet amount
     def set_bet_amount(self, amount):
         self.bet_amount = amount
@@ -95,15 +54,17 @@ class CoinTossGame(tk.Frame):
         self.instructions_label = tk.Label(self, text="Guess heads or tails:")
         self.instructions_label.pack()
 
-        self.guess_entry = tk.Entry(self)
-        self.guess_entry.pack()
-
-        self.toss_button = tk.Button(self, text="Toss Coin", command=self.toss_coin)
+        self.toss_button = tk.Button(self, text="Heads", command=self.toss_coin_heads)
         self.toss_button.pack()
 
+        self.toss_button = tk.Button(self, text="Tails", command=self.toss_coin_tails)
+        self.toss_button.pack()
 
         self.result_label = tk.Label(self, text="")
         self.result_label.pack()
+
+        self.result_message = tk.Label(self, text="")
+        self.result_message.pack()
 
         # Add a frame for the betting controls
         self.bet_frame = tk.Frame(self)
@@ -114,40 +75,79 @@ class CoinTossGame(tk.Frame):
             bet_button = tk.Button(self.bet_frame, text=f"Bet {amount}", command=lambda a=amount: self.set_bet_amount(a))
             bet_button.pack(side="left", padx=5)
 
+        all_in_button = tk.Button(self.bet_frame, text=f"All in", command=self.all_in)
+        all_in_button.pack(side="left", padx=5)
+                
+        
         # Add a label to display the current bet amount
         self.bet_amount_label = tk.Label(self.bet_frame, text="Current bet: 0")
         self.bet_amount_label.pack(side='left', padx=5)
+        self.bet_amount = 0
 
+        self.toss_button = tk.Button(self, text="Reset", command=self.reset)
+        self.toss_button.pack()
+
+        self.all_time_high = 100
+        self.all_time_high_label = tk.Label(self, text=f"All time high: {self.all_time_high}")
+        self.all_time_high_label.pack()
+    def reset(self):
+        self.balance = 100
+        self.balance_label.config(text=f"Balance: {self.balance}")
     def set_bet_amount(self, amount):
         self.bet_amount = amount
         self.bet_amount_label.config(text=f"Current bet: {self.bet_amount}")
+    
 
-    def toss_coin(self):
-        guess = self.guess_entry.get().lower()
-        if guess not in ['heads', 'tails']:
-            self.result_label.config(text="Please enter 'heads' or 'tails'")
-        elif not self.bet_amount:
-            self.result_label.config(text="Please place a bet first")
+    def toss_coin_heads(self):
+        if(self.bet_amount == 0):
+            self.result_message.config(text="You haven't set a bet!")
+            return
+        if(self.balance <= 0):
+            self.result_message.config(text="You have no money left")
+            return
+
+        guess = 'heads'
+        coin = random.choice(['heads', 'tails'])
+        if guess == coin:
+            self.result_message.config(text="Congratulations, you guessed correctly!")
+            self.win_bet()
         else:
-            coin = random.choice(['heads', 'tails'])
-            if guess == coin:
-                self.result_label.config(text="Congratulations, you guessed correctly!")
-                self.win_bet()
-            else:
-                self.result_label.config(text=f"Sorry, the coin landed on {coin}. Better luck next time!")
-                self.lose_bet()
+            self.result_message.config(text=f"Sorry, the coin landed on {coin}. Better luck next time!")
+            self.lose_bet()
+
+    def toss_coin_tails(self):
+        if(self.bet_amount == 0):
+            self.result_message.config(text="You haven't set a bet!")
+            return
+        if(self.balance == 0):
+            self.result_message.config(text="You have no money left")
+            return
+    
+        guess = 'tails'
+        coin = random.choice(['heads', 'tails'])
+        if guess == coin:
+            self.result_message.config(text="Congratulations, you guessed correctly!")
+            self.win_bet()
+        else:
+            self.result_message.config(text=f"Sorry, the coin landed on {coin}. Better luck next time!")
+            self.lose_bet()
 
     def win_bet(self):
         self.balance += self.bet_amount
         self.balance_label.config(text=f"Balance: {self.balance}")
         self.result_label.config(text=f"You won {self.bet_amount}!")
+        if(self.balance > self.all_time_high):
+            self.all_time_high = self.balance
+            self.all_time_high_label.config(text=f"All time high: {self.balance}")
 
     def lose_bet(self):
         self.balance -= self.bet_amount
         self.balance_label.config(text=f"Balance: {self.balance}")
         self.result_label.config(text=f"You lost {self.bet_amount} :( ")
+    def all_in(self):
+        self.bet_amount = self.balance
+        self.bet_amount_label.config(text=f"Current bet: {self.balance}")
 
-            
 class NumberGuessingGame(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
